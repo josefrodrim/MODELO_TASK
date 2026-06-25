@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  # ─── API de predicción ──────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: modelo-riesgo:latest
+    container_name: riesgo-api
+    ports:
+      - "8000:8000"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - GLM_MODEL_PATH=models/glm_model.pkl
+      - ML_MODEL_PATH=models/lgbm_model.pkl
+      - PREPROCESSOR_PATH=models/preprocessor.pkl
+      - LOG_LEVEL=INFO
+    volumes:
+      # Monta la carpeta de modelos localmente para actualizar sin reconstruir imagen
+      - ./models:/app/models:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ─── Jupyter Lab (solo para desarrollo/análisis) ────────────────────────────
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: riesgo-jupyter
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=scotia2024
+    volumes:
+      - ./notebooks:/home/jovyan/notebooks
+      - ./data:/home/jovyan/data
+      - ./src:/home/jovyan/src
+      - ./models:/home/jovyan/models
+    profiles:
+      # Solo arranca con: docker-compose --profile dev up
+      - dev
+
+networks:
+  default:
+    name: riesgo-network
