@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt onnxruntime
 
 
 # ─── Etapa 2: runtime ─────────────────────────────────────────────────────────
@@ -34,8 +34,7 @@ COPY models/ ./models/
 ENV API_HOST=0.0.0.0 \
     API_PORT=8000 \
     API_RELOAD=false \
-    GLM_MODEL_PATH=models/glm_model.pkl \
-    ML_MODEL_PATH=models/lgbm_model.pkl \
+    ONNX_MODEL_PATH=models/lgbm_model.onnx \
     PREPROCESSOR_PATH=models/preprocessor.pkl \
     PYTHONPATH=/app \
     PYTHONDONTWRITEBYTECODE=1 \

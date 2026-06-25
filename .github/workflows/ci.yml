@@ -22,7 +22,7 @@ jobs:
           cache: "pip"
 
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt onnxruntime
 
       - name: Verificar imports del paquete src
         run: |
@@ -32,6 +32,7 @@ jobs:
           python -c "from src.models.glm_model import GLMRiskModel"
           python -c "from src.models.ml_model import LGBMRiskModel"
           python -c "from src.api.app import app"
+          python -c "from src.api.predictor import ModelPredictor"
 
       - name: Ejecutar tests unitarios
         run: pytest tests/ -v --tb=short -q

@@ -51,6 +51,8 @@ def gini_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     from sklearn.metrics import roc_auc_score
     threshold = np.median(y_true)
     y_bin = (np.array(y_true) > threshold).astype(int)
+    if len(np.unique(y_bin)) < 2:
+        return 0.0
     auc = roc_auc_score(y_bin, y_pred)
     return round(float(2 * auc - 1), 4)
 
