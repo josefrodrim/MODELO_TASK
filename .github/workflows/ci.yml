@@ -37,4 +37,6 @@ jobs:
         run: pytest tests/ -v --tb=short -q
 
       - name: Lint (advertencias, no bloquea)
-        run: python -m flake8 src/ --max-line-length=100 --ignore=E203,W503 --exit-zero
+        run: |
+          pip install flake8 --quiet
+          python -m flake8 src/ --max-line-length=100 --ignore=E203,W503 --exit-zero
