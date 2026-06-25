@@ -55,13 +55,13 @@ def ks_stat(y_true, y_pred):
 
 
 def gini_coeff(y_true, y_pred):
-    n = len(y_true)
-    idx = np.argsort(y_pred)
-    y_s = y_true[idx]
-    cum_y = np.cumsum(y_s) / y_s.sum()
-    cum_pop = np.arange(1, n + 1) / n
-    trapz = getattr(np, "trapezoid", None) or getattr(np, "trapz")
-    return float(1 - 2 * trapz(cum_y, cum_pop))
+    # Gini de discriminación: 2*AUC - 1, binarizando TARGET por mediana.
+    # Estándar en credit risk scoring; mide separación alto/bajo ingreso.
+    from sklearn.metrics import roc_auc_score
+    threshold = np.median(y_true)
+    y_bin = (np.array(y_true) > threshold).astype(int)
+    auc = roc_auc_score(y_bin, y_pred)
+    return float(2 * auc - 1)
 
 
 def compute_metrics(y_true, y_pred, label=""):
