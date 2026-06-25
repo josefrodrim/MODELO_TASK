@@ -40,23 +40,19 @@ def regression_metrics(y_true: np.ndarray, y_pred: np.ndarray, prefix: str = "")
 
 def gini_coefficient(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """
-    Coeficiente de Gini normalizado basado en la curva de Lorenz.
-    Mide qué tan bien el modelo rank-ordena los clientes.
-    Gini = 2 * AUC - 1 cuando se discretiza a binario, pero aquí se computa
-    directamente sobre la regresión vía área bajo la curva de Lorenz.
+    Gini de discriminacion crediticia: 2 * AUC - 1.
 
-    Rango: 0 (sin discriminación) → 1 (discriminación perfecta).
+    Binariza TARGET por la mediana (alto ingreso vs bajo ingreso) y calcula
+    el AUC usando la prediccion como score rankeador.
+    Estandar en scoring bancario: mide capacidad de separar clientes de
+    alto y bajo ingreso. Rango: 0 (aleatorio) -> 1 (perfecto).
+    Umbral industria: >0.40 aceptable, >0.55 bueno.
     """
-    df = pd.DataFrame({"y_true": y_true, "y_pred": y_pred}).sort_values(
-        "y_pred", ascending=True
-    )
-    n = len(df)
-    lorenz_actual = df["y_true"].cumsum() / df["y_true"].sum()
-    lorenz_equal = np.arange(1, n + 1) / n
-    # Área entre la curva de Lorenz y la línea de igualdad perfecta
-    _trapz = np.trapezoid if hasattr(np, 'trapezoid') else np.trapz  # NumPy ≥2.0 renamed it
-    gini = 1 - 2 * _trapz(lorenz_actual, lorenz_equal)
-    return round(abs(gini), 4)
+    from sklearn.metrics import roc_auc_score
+    threshold = np.median(y_true)
+    y_bin = (np.array(y_true) > threshold).astype(int)
+    auc = roc_auc_score(y_bin, y_pred)
+    return round(float(2 * auc - 1), 4)
 
 
 def ks_statistic(y_true: np.ndarray, y_pred: np.ndarray, n_bins: int = 10) -> float:
