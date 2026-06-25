@@ -28,8 +28,7 @@ models/*.pkl
 models/*.joblib
 models/*.json
 !models/.gitkeep
-# Excepciones para despliegue en Vercel (LGBM + preprocessor, < 2 MB)
-!models/lgbm_model.pkl
+# Excepciones para despliegue en Vercel (ONNX + preprocessor, < 2 MB)
 !models/lgbm_model.onnx
 !models/preprocessor.pkl
 
@@ -57,4 +56,9 @@ Thumbs.db
 
 # Documentos confidenciales del caso práctico
 *.docx
+
+# Herramientas de desarrollo (no deben ir al repo)
+CLAUDE.md
+.claude/
 .vercel
+catboost_info/
