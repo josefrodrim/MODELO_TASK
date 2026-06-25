@@ -1,5 +1,5 @@
 """
-API REST de scoring crediticio — LightGBM.
+API REST de scoring crediticio — LightGBM via ONNX Runtime.
 
 Endpoints:
   GET  /health           → Estado del servicio
@@ -32,29 +32,28 @@ from src.api.predictor import ModelPredictor
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-ML_MODEL_PATH = os.getenv("ML_MODEL_PATH", "models/lgbm_model.pkl")
+ONNX_MODEL_PATH = os.getenv("ONNX_MODEL_PATH", "models/lgbm_model.onnx")
 PREPROCESSOR_PATH = os.getenv("PREPROCESSOR_PATH", "models/preprocessor.pkl")
 API_VERSION = "1.0.0"
 
-predictor = ModelPredictor(ML_MODEL_PATH, PREPROCESSOR_PATH)
+predictor = ModelPredictor(ONNX_MODEL_PATH, PREPROCESSOR_PATH)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Cargando modelo LightGBM...")
+    logger.info("Cargando modelo ONNX...")
     predictor.load_models()
     if predictor.is_ready:
         logger.info("Modelo listo.")
     else:
-        logger.warning("API arrancó sin modelo — los endpoints de predicción fallarán.")
+        logger.warning("API arrancó sin modelo.")
     yield
-    logger.info("API apagando...")
 
 
 app = FastAPI(
     title="API de Scoring de Riesgo Crediticio",
     description=(
-        "Modelo LightGBM para estimación de score de riesgo crediticio. "
+        "Modelo LightGBM (ONNX) para estimación de score de riesgo crediticio. "
         "Desarrollado para Scotiabank Perú — caso práctico Risk Data Scientist."
     ),
     version=API_VERSION,
@@ -79,23 +78,22 @@ def model_info():
     if not predictor.is_ready:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                             detail="Modelo no disponible.")
-    feature_names = predictor.lgbm_model.feature_names_
+    n_features = predictor.session.get_inputs()[0].shape[1]
     return ModelInfoResponse(
-        model="LightGBM",
-        n_features=len(feature_names),
-        features=feature_names,
+        model="LightGBM (ONNX)",
+        n_features=n_features,
+        features=predictor.preprocessor.get_feature_names() if hasattr(predictor.preprocessor, 'get_feature_names') else [],
         version=API_VERSION,
     )
 
 
 @app.post("/predict", response_model=PredictionResponse, tags=["Predicción"])
 def predict_single(request: PredictionRequest):
-    """Predicción individual de score crediticio. Acepta X1–X12 y devuelve el score predicho."""
+    """Predicción individual. Acepta X1–X12 y devuelve el score crediticio predicho."""
     if not predictor.is_ready:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                             detail="Modelo no disponible.")
-    record = request.model_dump()
-    pred = predictor.predict_single(record)
+    pred = predictor.predict_single(request.model_dump())
     return PredictionResponse(prediction=pred, request_id=str(uuid.uuid4()))
 
 

@@ -1,5 +1,6 @@
 """
 Vercel entrypoint — envuelve el app FastAPI de src/api/app.py.
+Usa ONNX Runtime para inferencia (no requiere libgomp/OpenMP).
 """
 import os
 import sys
@@ -7,7 +8,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-os.environ.setdefault("ML_MODEL_PATH", os.path.join(ROOT, "models", "lgbm_model.pkl"))
+os.environ.setdefault("ONNX_MODEL_PATH", os.path.join(ROOT, "models", "lgbm_model.onnx"))
 os.environ.setdefault("PREPROCESSOR_PATH", os.path.join(ROOT, "models", "preprocessor.pkl"))
 
 from src.api.app import app, predictor  # noqa: E402

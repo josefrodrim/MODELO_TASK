@@ -30,6 +30,7 @@ models/*.json
 !models/.gitkeep
 # Excepciones para despliegue en Vercel (LGBM + preprocessor, < 2 MB)
 !models/lgbm_model.pkl
+!models/lgbm_model.onnx
 !models/preprocessor.pkl
 
 # Reports — figuras binarias no se suben, métricas CSV sí
@@ -56,3 +57,4 @@ Thumbs.db
 
 # Documentos confidenciales del caso práctico
 *.docx
+.vercel
