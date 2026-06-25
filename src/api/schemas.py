@@ -3,7 +3,7 @@ Esquemas Pydantic para la API de predicción.
 Validan y documentan el contrato de entrada/salida de los endpoints.
 """
 
-from typing import Optional, List, Literal
+from typing import Optional, List
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -22,9 +22,6 @@ class PredictionRequest(BaseModel):
     X10: Optional[float] = Field(None, description="Variable numérica X10")
     X11: Optional[float] = Field(None, description="Variable numérica X11")
     X12: Optional[float] = Field(None, description="Variable numérica X12")
-    model: Literal["glm", "lgbm", "both"] = Field(
-        "lgbm", description="Modelo a usar para la predicción"
-    )
 
     @field_validator("X3", "X4", mode="before")
     @classmethod
@@ -49,7 +46,6 @@ class PredictionRequest(BaseModel):
                 "X10": 30170.0,
                 "X11": 146.0,
                 "X12": 47.0,
-                "model": "lgbm",
             }
         }
     }
@@ -58,9 +54,7 @@ class PredictionRequest(BaseModel):
 class PredictionResponse(BaseModel):
     """Respuesta de una predicción individual."""
 
-    prediction_glm: Optional[float] = Field(None, description="Score predicho por GLM")
-    prediction_lgbm: Optional[float] = Field(None, description="Score predicho por LightGBM")
-    model_used: str
+    prediction: float = Field(..., description="Score predicho por LightGBM")
     request_id: str
 
 
@@ -73,21 +67,19 @@ class BatchPredictionRequest(BaseModel):
 class BatchPredictionResponse(BaseModel):
     """Respuesta de predicción en lote."""
 
-    predictions: List[dict]
+    predictions: List[float]
     n_records: int
-    model_used: str
 
 
 class ModelInfoResponse(BaseModel):
-    """Metadata de los modelos cargados."""
+    """Metadata del modelo cargado."""
 
-    glm_loaded: bool
-    lgbm_loaded: bool
-    glm_features: Optional[List[str]]
-    lgbm_features: Optional[List[str]]
+    model: str
+    n_features: int
+    features: List[str]
     version: str
 
 
 class HealthResponse(BaseModel):
     status: str
-    models_ready: bool
+    model_ready: bool
