@@ -14,6 +14,7 @@ import pandas as pd
 import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from statsmodels.stats.diagnostic import het_breuschpagan
+from statsmodels.stats.stattools import durbin_watson as dw_test
 from scipy import stats
 import joblib
 
@@ -171,13 +172,15 @@ def assumption_tests(model: sm.OLS, X: pd.DataFrame, y_log: pd.Series) -> dict:
     results = {}
 
     # Normalidad de residuos (Jarque-Bera)
-    jb_stat, jb_pval, jb_skew, jb_kurt = stats.jarque_bera(residuals)
+    # scipy >= 1.9 retorna solo (statistic, pvalue); skew/kurt se calculan aparte
+    jb_result = stats.jarque_bera(residuals)
+    jb_stat, jb_pval = jb_result.statistic, jb_result.pvalue
     results["jarque_bera"] = {
-        "statistic": round(jb_stat, 4),
-        "p_value": round(jb_pval, 4),
-        "skewness": round(jb_skew, 4),
-        "kurtosis": round(jb_kurt, 4),
-        "cumple_supuesto": jb_pval > 0.05,
+        "statistic": round(float(jb_stat), 4),
+        "p_value": round(float(jb_pval), 4),
+        "skewness": round(float(stats.skew(residuals)), 4),
+        "kurtosis": round(float(stats.kurtosis(residuals)), 4),
+        "cumple_supuesto": float(jb_pval) > 0.05,
     }
 
     # Homocedasticidad (Breusch-Pagan)
@@ -190,9 +193,10 @@ def assumption_tests(model: sm.OLS, X: pd.DataFrame, y_log: pd.Series) -> dict:
     }
 
     # Autocorrelación (Durbin-Watson; ~2 = sin autocorrelación)
+    dw_stat = float(dw_test(residuals))
     results["durbin_watson"] = {
-        "statistic": round(model.durbin_watson, 4),
-        "cumple_supuesto": 1.5 < model.durbin_watson < 2.5,
+        "statistic": round(dw_stat, 4),
+        "cumple_supuesto": 1.5 < dw_stat < 2.5,
     }
 
     return results
