@@ -32,18 +32,20 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 def _objective(trial, X: np.ndarray, y: np.ndarray, cv: int = 5) -> float:
     """Función objetivo de Optuna: RMSE en CV sobre log(TARGET)."""
     params = {
-        "objective": "regression",
+        "objective": "tweedie",        # mejor que MSE para distribuciones right-skewed positivas
+        "tweedie_variance_power": trial.suggest_float("tweedie_variance_power", 1.0, 1.9),
         "metric": "rmse",
         "verbosity": -1,
         "boosting_type": "gbdt",
-        "num_leaves": trial.suggest_int("num_leaves", 20, 200),
-        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-        "n_estimators": trial.suggest_int("n_estimators", 100, 1000),
-        "min_child_samples": trial.suggest_int("min_child_samples", 10, 100),
+        "num_leaves": trial.suggest_int("num_leaves", 31, 300),
+        "max_depth": trial.suggest_int("max_depth", 4, 12),
+        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.15, log=True),
+        "n_estimators": trial.suggest_int("n_estimators", 300, 2000),
+        "min_child_samples": trial.suggest_int("min_child_samples", 5, 80),
         "subsample": trial.suggest_float("subsample", 0.6, 1.0),
-        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
-        "reg_alpha": trial.suggest_float("reg_alpha", 1e-4, 10.0, log=True),
-        "reg_lambda": trial.suggest_float("reg_lambda", 1e-4, 10.0, log=True),
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+        "reg_alpha": trial.suggest_float("reg_alpha", 1e-4, 5.0, log=True),
+        "reg_lambda": trial.suggest_float("reg_lambda", 1e-4, 5.0, log=True),
         "random_state": 42,
     }
     model = lgb.LGBMRegressor(**params)
@@ -57,13 +59,12 @@ def tune_lgbm(
 ) -> dict:
     """
     Búsqueda de hiperparámetros con Optuna.
-    Se optimiza sobre log(TARGET) para alinear con el espacio del GLM.
+    Objetivo Tweedie: optimizado directamente sobre TARGET (no log), ideal para
+    distribuciones right-skewed positivas como ingresos/saldos en crédito.
     """
-    y_log = np.log(y_train)
-
     study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=42))
     study.optimize(
-        lambda trial: _objective(trial, X_train.values, y_log, cv),
+        lambda trial: _objective(trial, X_train.values, y_train.values, cv),
         n_trials=n_trials,
         show_progress_bar=True,
     )
@@ -87,11 +88,12 @@ class LGBMRiskModel:
       - shap_explainer_:   TreeExplainer de SHAP (lazy-init)
     """
 
-    def __init__(self, best_params: dict = None, log_target: bool = True):
+    def __init__(self, best_params: dict = None, log_target: bool = False):
         """
         Args:
             best_params: parámetros de Optuna; si None, usa defaults razonables.
-            log_target:  si True, entrena sobre log(TARGET) y predice con exp().
+            log_target:  False cuando se usa objetivo Tweedie (predice en escala original).
+                         True solo si se usa objetivo 'regression' con log(TARGET).
         """
         self.best_params = best_params
         self.log_target = log_target
@@ -105,10 +107,11 @@ class LGBMRiskModel:
         y_fit = np.log(y) if self.log_target else y.values
 
         default_params = {
-            "objective": "regression",
+            "objective": "tweedie",
+            "tweedie_variance_power": 1.5,
             "metric": "rmse",
             "verbosity": -1,
-            "n_estimators": 500,
+            "n_estimators": 1000,
             "num_leaves": 63,
             "learning_rate": 0.05,
             "subsample": 0.8,
