@@ -20,8 +20,8 @@ build/
 data/raw/*.csv
 data/processed/*.pkl
 data/processed/*.parquet
-# CSV en raíz (copia temporal del dataset)
-*.csv
+# CSV en raíz (copia temporal del dataset) — las métricas en reports/metrics/ sí se suben
+/*.csv
 
 # Models (artefactos binarios grandes)
 models/*.pkl
@@ -29,7 +29,7 @@ models/*.joblib
 models/*.json
 !models/.gitkeep
 
-# Reports
+# Reports — figuras binarias no se suben, métricas CSV sí
 reports/figures/*.png
 reports/figures/*.pdf
 !reports/figures/.gitkeep
