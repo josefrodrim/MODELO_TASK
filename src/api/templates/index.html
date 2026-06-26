@@ -182,6 +182,35 @@
     }
     .btn-ghost:hover { background: var(--lgray); }
 
+    /* ── Profile buttons ── */
+    .profile-btns { display: flex; flex-direction: column; gap: 8px; }
+    .btn-profile {
+      width: 100%; padding: 10px 14px; border-radius: 7px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      border: 2px solid; text-align: left;
+      display: flex; align-items: center; gap: 10px;
+      transition: all .2s;
+    }
+    .btn-profile .p-icon { font-size: 16px; }
+    .btn-profile .p-label { flex: 1; }
+    .btn-profile .p-score { font-size: 11px; font-weight: 600; opacity: .75; }
+    .btn-profile.riesgo  { border-color: #c0392b; color: #c0392b; background: #fdf2f0; }
+    .btn-profile.riesgo:hover  { background: #c0392b; color: white; }
+    .btn-profile.promedio{ border-color: #d68910; color: #d68910; background: #fdf8e6; }
+    .btn-profile.promedio:hover{ background: #d68910; color: white; }
+    .btn-profile.bajo    { border-color: #1a7a3c; color: #1a7a3c; background: #f0faf4; }
+    .btn-profile.bajo:hover    { background: #1a7a3c; color: white; }
+
+    /* ── Risk badge ── */
+    .risk-badge {
+      display: inline-block; margin-top: 10px;
+      padding: 4px 12px; border-radius: 99px;
+      font-size: 12px; font-weight: 700; letter-spacing: .3px;
+    }
+    .risk-badge.alto    { background: #fdecea; color: #c0392b; }
+    .risk-badge.moderado{ background: #fdf3e3; color: #d68910; }
+    .risk-badge.bajo    { background: #eaf7ef; color: #1a7a3c; }
+
     /* ── Spinner ── */
     .spinner {
       width: 17px; height: 17px;
@@ -408,6 +437,7 @@
           <div class="result-score">
             <span class="cur">S/. </span><span id="resultVal">—</span>
           </div>
+          <div><span class="risk-badge" id="riskBadge"></span></div>
           <div class="result-meta" id="resultMeta"></div>
         </div>
 
@@ -419,10 +449,26 @@
 
       <!-- Quick actions -->
       <div class="card">
-        <div class="card-hdr"><div class="hdr-dot"></div>Acciones rápidas</div>
+        <div class="card-hdr"><div class="hdr-dot"></div>Perfiles de cliente</div>
         <div class="card-body">
-          <button class="btn-secondary" onclick="loadExample()">▶ Cargar ejemplo de prueba</button>
-          <button class="btn-ghost"     onclick="resetForm()">↺ Limpiar formulario</button>
+          <div class="profile-btns">
+            <button class="btn-profile riesgo"   onclick="loadProfile('riesgo')">
+              <span class="p-icon">⚠</span>
+              <span class="p-label">Cliente riesgoso</span>
+              <span class="p-score">~S/. 2,929</span>
+            </button>
+            <button class="btn-profile promedio"  onclick="loadProfile('promedio')">
+              <span class="p-icon">◈</span>
+              <span class="p-label">Cliente promedio</span>
+              <span class="p-score">~S/. 9,565</span>
+            </button>
+            <button class="btn-profile bajo"      onclick="loadProfile('bajo')">
+              <span class="p-icon">✓</span>
+              <span class="p-label">Cliente bajo riesgo</span>
+              <span class="p-score">~S/. 14,946</span>
+            </button>
+          </div>
+          <button class="btn-ghost" style="margin-top:10px;" onclick="resetForm()">↺ Limpiar formulario</button>
         </div>
       </div>
 
@@ -535,13 +581,25 @@
     }
   }
 
-  /* ── Load example ── */
-  function loadExample() {
-    const vals = { X1:'207137', X2:'6427', X3:'', X4:'', X5:'3222',
-                   X6:'1', X7:'633', X8:'1', X9:'SANTIAGO DE SURCO',
-                   X10:'30170', X11:'146', X12:'47' };
+  /* ── Client profiles ── */
+  const PROFILES = {
+    riesgo:   { X1:'18000',  X2:'800',   X3:'', X4:'', X5:'500',   X6:'1', X7:'320', X8:'1', X9:'CALLAO',            X10:'5000',  X11:'20',  X12:'8'   },
+    promedio:  { X1:'207137', X2:'6427',  X3:'', X4:'', X5:'3222',  X6:'1', X7:'633', X8:'1', X9:'SANTIAGO DE SURCO', X10:'30170', X11:'146', X12:'47'  },
+    bajo:      { X1:'850000', X2:'50000', X3:'', X4:'', X5:'15000', X6:'2', X7:'900', X8:'1', X9:'MIRAFLORES',        X10:'80000', X11:'500', X12:'200' },
+  };
+  const PROFILE_LABELS = { riesgo: 'Cliente riesgoso', promedio: 'Cliente promedio', bajo: 'Cliente bajo riesgo' };
+
+  function loadProfile(name) {
+    const vals = PROFILES[name];
     Object.entries(vals).forEach(([k,v]) => { document.getElementById(k).value = v; });
-    toast('✓ Ejemplo cargado');
+    document.getElementById('result').className = 'result';
+    toast('✓ ' + PROFILE_LABELS[name] + ' cargado');
+  }
+
+  function riskLevel(score) {
+    if (score < 5000)  return { cls: 'alto',     label: '⚠ Alto riesgo' };
+    if (score < 11000) return { cls: 'moderado',  label: '◈ Riesgo moderado' };
+    return                    { cls: 'bajo',      label: '✓ Bajo riesgo' };
   }
 
   function resetForm() {
@@ -603,6 +661,10 @@
       document.getElementById('resultVal').textContent  = score;
       document.getElementById('resultMeta').textContent =
         `ID: ${data.request_id.slice(0,8)}... · ${ms} ms · LightGBM ONNX`;
+      const risk = riskLevel(data.prediction);
+      const badge = document.getElementById('riskBadge');
+      badge.textContent  = risk.label;
+      badge.className    = `risk-badge ${risk.cls}`;
       panel.className = 'result show';
       toast('✓ Predicción completada');
 
