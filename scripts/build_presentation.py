@@ -329,17 +329,24 @@ def on_cover(cv, doc):
     # Links
     cv.setFont("Arial", 8.5)
     cv.setFillColor(GRAY)
-    cv.drawString(2.5*cm, H * 0.095, "API en produccion:")
+    cv.drawString(2.5*cm, H * 0.108, "Interfaz web:")
     cv.setFont("Arial-Bold", 8.5)
     cv.setFillColor(BLUE)
-    cv.drawString(2.5*cm + 3.4*cm, H * 0.095, "modelo-task.vercel.app")
+    cv.drawString(2.5*cm + 3.4*cm, H * 0.108, "modelo-task.vercel.app")
 
     cv.setFont("Arial", 8.5)
     cv.setFillColor(GRAY)
-    cv.drawString(2.5*cm, H * 0.063, "Codigo fuente:")
+    cv.drawString(2.5*cm, H * 0.076, "API REST:")
     cv.setFont("Arial-Bold", 8.5)
     cv.setFillColor(BLUE)
-    cv.drawString(2.5*cm + 3.4*cm, H * 0.063, "github.com/josefrodrim/MODELO_TASK")
+    cv.drawString(2.5*cm + 3.4*cm, H * 0.076, "modelo-task.vercel.app/docs")
+
+    cv.setFont("Arial", 8.5)
+    cv.setFillColor(GRAY)
+    cv.drawString(2.5*cm, H * 0.044, "Codigo fuente:")
+    cv.setFont("Arial-Bold", 8.5)
+    cv.setFillColor(BLUE)
+    cv.drawString(2.5*cm + 3.4*cm, H * 0.044, "github.com/josefrodrim/MODELO_TASK")
 
     cv.setFont("Arial-Italic", 7.5)
     cv.setFillColor(HexColor("#AAAAAA"))
@@ -911,10 +918,29 @@ def build():
     A(p("El modelo esta desplegado y operativo. Puede ser consultado de forma inmediata:"))
     A(sp(0.5))
 
-    api_data = [
-        [p("API EN PRODUCCION — Vercel (Serverless)",
-           ParagraphStyle("bh", fontName="Arial-Bold", fontSize=10, textColor=WHITE, alignment=TA_CENTER))],
+    web_data = [
+        [p("INTERFAZ WEB INTERACTIVA — Frontend del Predictor",
+           ParagraphStyle("wh", fontName="Arial-Bold", fontSize=10, textColor=WHITE, alignment=TA_CENTER))],
         [p("https://modelo-task.vercel.app",
+           ParagraphStyle("wu", fontName="Arial-Bold", fontSize=16, textColor=RED, alignment=TA_CENTER))],
+        [p("Perfiles de cliente preconfigurados  |  Score en tiempo real  |  Badge de nivel de riesgo",
+           ParagraphStyle("we", fontName="Arial", fontSize=9, textColor=GRAY, alignment=TA_CENTER))],
+    ]
+    wt = Table(web_data, colWidths=[15*cm])
+    wt.setStyle(TableStyle([
+        ("BACKGROUND",    (0,0), (0,0), RED),
+        ("BACKGROUND",    (0,1), (0,2), LGRAY),
+        ("BOX",           (0,0), (-1,-1), 1, RED),
+        ("TOPPADDING",    (0,0), (-1,-1), 10),
+        ("BOTTOMPADDING", (0,0), (-1,-1), 10),
+    ]))
+    A(wt)
+    A(sp(0.35))
+
+    api_data = [
+        [p("API REST EN PRODUCCION — Vercel (Serverless)",
+           ParagraphStyle("bh", fontName="Arial-Bold", fontSize=10, textColor=WHITE, alignment=TA_CENTER))],
+        [p("https://modelo-task.vercel.app/docs",
            ParagraphStyle("bu", fontName="Arial-Bold", fontSize=16, textColor=BLUE, alignment=TA_CENTER))],
         [p("GET /health   |   GET /model/info   |   POST /predict   |   POST /predict/batch",
            ParagraphStyle("be", fontName="Arial", fontSize=9, textColor=GRAY, alignment=TA_CENTER))],
