@@ -14,10 +14,12 @@ Uso local:
 import uuid
 import logging
 import os
+from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from src.api.schemas import (
     PredictionRequest,
@@ -66,6 +68,16 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+
+_TEMPLATE_DIR = Path(__file__).parent / "templates"
+
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+def frontend():
+    """Interfaz web del predictor de score crediticio."""
+    html = (_TEMPLATE_DIR / "index.html").read_text(encoding="utf-8")
+    return HTMLResponse(content=html)
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Sistema"])

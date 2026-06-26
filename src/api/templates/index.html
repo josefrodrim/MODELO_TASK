@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Score de Riesgo Crediticio — Scotiabank Perú</title>
+  <style>
+    :root {
+      --red:   #C8102E;
+      --navy:  #002D62;
+      --blue:  #0057A8;
+      --gray:  #5A5A5A;
+      --lgray: #F5F6F8;
+      --mgray: #D4D7DC;
+      --dark:  #1A1A2E;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #F0F2F5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--navy);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    }
+    .header-accent { background: var(--red); height: 4px; }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 32px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      background: var(--red);
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 900; color: white;
+      letter-spacing: -1px;
+    }
+    .brand-text h1 { font-size: 15px; font-weight: 700; color: white; letter-spacing: 0.4px; }
+    .brand-text p  { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+
+    .header-status {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12.5px; color: rgba(255,255,255,0.75);
+    }
+    .dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: #666; transition: background .3s;
+    }
+    .dot.ok    { background: #4CAF50; box-shadow: 0 0 7px rgba(76,175,80,.6); }
+    .dot.error { background: var(--red); }
+
+    /* ── Main ── */
+    main { max-width: 1120px; margin: 0 auto; padding: 32px 20px 48px; }
+
+    /* ── Hero ── */
+    .hero {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--mgray);
+      padding: 40px 32px;
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .hero h2 { font-size: 26px; color: var(--navy); margin-bottom: 8px; }
+    .hero p  { font-size: 14.5px; color: var(--gray); max-width: 600px; margin: 0 auto 20px; line-height: 1.65; }
+    .badges  { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .badge   {
+      background: var(--lgray); border: 1px solid var(--mgray);
+      padding: 5px 13px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; color: var(--navy);
+    }
+    .badge strong { color: var(--red); }
+
+    /* ── Layout grid ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid var(--mgray);
+      overflow: hidden;
+    }
+    .card + .card { margin-top: 16px; }
+
+    .card-hdr {
+      background: var(--navy);
+      color: white;
+      padding: 14px 22px;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .hdr-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--red);
+    }
+    .card-body { padding: 22px; }
+
+    /* ── Form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field.full { grid-column: 1 / -1; }
+
+    .field label {
+      font-size: 11px; font-weight: 700;
+      color: var(--navy); text-transform: uppercase; letter-spacing: .5px;
+    }
+    .field small { font-size: 10.5px; color: #999; }
+
+    .field input {
+      border: 1.5px solid var(--mgray);
+      border-radius: 6px;
+      padding: 9px 11px;
+      font-size: 14px; color: #333;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+      background: white;
+      width: 100%;
+    }
+    .field input:focus {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(0,45,98,.08);
+    }
+    .field input::placeholder { color: #bbb; font-size: 13px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%; background: var(--red); color: white;
+      border: none; padding: 13px; border-radius: 8px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      margin-top: 18px; letter-spacing: .4px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover   { background: #a80d24; }
+    .btn-primary:active  { transform: scale(.99); }
+    .btn-primary:disabled{ background: var(--mgray); cursor: not-allowed; }
+
+    .btn-secondary {
+      width: 100%; background: none;
+      border: 1.5px solid var(--navy); color: var(--navy);
+      padding: 9px 16px; border-radius: 7px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-secondary:hover { background: var(--navy); color: white; }
+
+    .btn-ghost {
+      width: 100%; background: none;
+      border: 1.5px solid var(--mgray); color: var(--gray);
+      padding: 9px 16px; border-radius: 7px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      margin-top: 8px; transition: background .2s;
+    }
+    .btn-ghost:hover { background: var(--lgray); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 17px; height: 17px;
+      border: 2.5px solid rgba(255,255,255,.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin .7s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result ── */
+    .result {
+      display: none; margin-top: 18px;
+      border-radius: 8px; padding: 18px 20px;
+      border-left: 4px solid var(--navy);
+      background: var(--lgray);
+      animation: fadeIn .3s ease;
+    }
+    .result.show  { display: block; }
+    .result.err   { border-left-color: var(--red); }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+
+    .result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--gray); letter-spacing: .5px; margin-bottom: 4px; }
+    .result-score { font-size: 44px; font-weight: 700; color: var(--navy); line-height: 1; }
+    .result-score .cur { font-size: 22px; color: var(--red); }
+    .result-meta  { font-size: 11px; color: #aaa; margin-top: 7px; }
+
+    /* ── Sidebar metrics ── */
+    .metric-block { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--lgray); }
+    .metric-block:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .block-title { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--gray); margin-bottom: 8px; }
+
+    .mrow {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 0; border-bottom: 1px solid var(--lgray);
+      font-size: 13px;
+    }
+    .mrow:last-child { border-bottom: none; }
+    .mrow .ml { color: var(--gray); }
+    .mrow .mv { font-weight: 700; color: var(--navy); }
+    .mrow .mv.red { color: var(--red); }
+
+    /* ── Links ── */
+    .link-list { display: flex; flex-direction: column; gap: 8px; }
+    .link-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 10px 13px; background: var(--lgray);
+      border-radius: 8px; text-decoration: none; color: var(--navy);
+      font-size: 13px; font-weight: 600; transition: background .2s;
+    }
+    .link-item:hover { background: var(--mgray); }
+    .link-icon {
+      width: 33px; height: 33px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .link-sub { font-size: 10.5px; color: #999; font-weight: 400; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 24px 20px;
+      color: #aaa; font-size: 12px;
+      border-top: 1px solid var(--mgray); margin-top: 36px;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 22px; right: 22px;
+      background: var(--navy); color: white;
+      padding: 11px 18px; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      opacity: 0; transform: translateY(8px);
+      transition: all .3s; pointer-events: none; z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: none; }
+
+    @media (max-width: 780px) {
+      .layout     { grid-template-columns: 1fr; }
+      .form-grid  { grid-template-columns: 1fr; }
+      .field.full { grid-column: 1; }
+      .hero h2    { font-size: 21px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Header -->
+<header>
+  <div class="header-accent"></div>
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="brand-icon">S</div>
+      <div class="brand-text">
+        <h1>SCOTIABANK PERÚ</h1>
+        <p>Risk Data Scientist — Caso Práctico</p>
+      </div>
+    </div>
+    <div class="header-status">
+      <div class="dot" id="dot"></div>
+      <span id="statusTxt">Verificando modelo...</span>
+      <span style="opacity:.3;margin:0 4px">|</span>
+      <span>LightGBM ONNX v1.0.0</span>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h2>Predictor de Score de Riesgo Crediticio</h2>
+    <p>Ingresa las variables del cliente para obtener el score predicho por el modelo
+       LightGBM entrenado sobre datos de Scotiabank Perú.
+       Los campos vacíos se tratan como dato faltante.</p>
+    <div class="badges">
+      <div class="badge">R² <strong>0.368</strong></div>
+      <div class="badge">Gini <strong>0.587</strong></div>
+      <div class="badge">KS <strong>0.444</strong></div>
+      <div class="badge">RMSE <strong>S/. 4,675</strong></div>
+      <div class="badge"><strong>47</strong> features · ONNX Runtime</div>
+    </div>
+  </div>
+
+  <!-- Layout -->
+  <div class="layout">
+
+    <!-- LEFT: formulario -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="hdr-dot"></div>
+        Datos del cliente (X1 – X12)
+      </div>
+      <div class="card-body">
+        <form id="form" autocomplete="off">
+          <div class="form-grid">
+
+            <div class="field">
+              <label>X1 — Ingreso mensual</label>
+              <small>Ingreso estimado en S/.</small>
+              <input id="X1"  type="number" step="any" placeholder="207137">
+            </div>
+
+            <div class="field">
+              <label>X2 — Saldo bancario</label>
+              <small>Saldo promedio en cuenta S/.</small>
+              <input id="X2"  type="number" step="any" placeholder="6427">
+            </div>
+
+            <div class="field">
+              <label>X3 — Variable 3</label>
+              <small>Dejar vacío si no hay dato</small>
+              <input id="X3"  type="number" step="any" placeholder="vacío = sin dato">
+            </div>
+
+            <div class="field">
+              <label>X4 — Variable 4</label>
+              <small>Dejar vacío si no hay dato</small>
+              <input id="X4"  type="number" step="any" placeholder="vacío = sin dato">
+            </div>
+
+            <div class="field">
+              <label>X5 — Variable 5</label>
+              <small>Variable numérica complementaria</small>
+              <input id="X5"  type="number" step="any" placeholder="3222">
+            </div>
+
+            <div class="field">
+              <label>X6 — Segmento laboral</label>
+              <small>Tipo de empleo (numérico)</small>
+              <input id="X6"  type="number" step="any" placeholder="1">
+            </div>
+
+            <div class="field">
+              <label>X7 — Score de buró</label>
+              <small>Historial crediticio bureau</small>
+              <input id="X7"  type="number" step="any" placeholder="633">
+            </div>
+
+            <div class="field">
+              <label>X8 — Variable 8</label>
+              <small>Baja cardinalidad</small>
+              <input id="X8"  type="number" step="any" placeholder="1">
+            </div>
+
+            <div class="field full">
+              <label>X9 — Distrito geográfico</label>
+              <small>Nombre del distrito (texto) — ej. MIRAFLORES, SAN ISIDRO, SANTIAGO DE SURCO</small>
+              <input id="X9"  type="text" placeholder="SANTIAGO DE SURCO">
+            </div>
+
+            <div class="field">
+              <label>X10 — Variable 10</label>
+              <small>Variable numérica</small>
+              <input id="X10" type="number" step="any" placeholder="30170">
+            </div>
+
+            <div class="field">
+              <label>X11 — Variable 11</label>
+              <small>Variable numérica</small>
+              <input id="X11" type="number" step="any" placeholder="146">
+            </div>
+
+            <div class="field">
+              <label>X12 — Variable 12</label>
+              <small>Variable numérica</small>
+              <input id="X12" type="number" step="any" placeholder="47">
+            </div>
+
+          </div><!-- /form-grid -->
+
+          <button class="btn-primary" id="submitBtn" type="submit">
+            <div class="spinner" id="spinner"></div>
+            <span id="btnTxt">Calcular Score</span>
+          </button>
+        </form>
+
+        <!-- Result -->
+        <div class="result" id="result">
+          <div class="result-label">Score predicho — LightGBM (ONNX)</div>
+          <div class="result-score">
+            <span class="cur">S/. </span><span id="resultVal">—</span>
+          </div>
+          <div class="result-meta" id="resultMeta"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: sidebar -->
+    <div>
+
+      <!-- Quick actions -->
+      <div class="card">
+        <div class="card-hdr"><div class="hdr-dot"></div>Acciones rápidas</div>
+        <div class="card-body">
+          <button class="btn-secondary" onclick="loadExample()">▶ Cargar ejemplo de prueba</button>
+          <button class="btn-ghost"     onclick="resetForm()">↺ Limpiar formulario</button>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="card">
+        <div class="card-hdr"><div class="hdr-dot"></div>Métricas del modelo</div>
+        <div class="card-body">
+
+          <div class="metric-block">
+            <div class="block-title">Rendimiento en test (16,667 obs)</div>
+            <div class="mrow"><span class="ml">R²</span>           <span class="mv red">0.368</span></div>
+            <div class="mrow"><span class="ml">Gini (2×AUC−1)</span><span class="mv red">0.587</span></div>
+            <div class="mrow"><span class="ml">KS</span>           <span class="mv red">0.444</span></div>
+            <div class="mrow"><span class="ml">RMSE</span>         <span class="mv">S/. 4,675</span></div>
+          </div>
+
+          <div class="metric-block">
+            <div class="block-title">Infraestructura</div>
+            <div class="mrow"><span class="ml">Modelo</span>     <span class="mv">LightGBM ONNX</span></div>
+            <div class="mrow"><span class="ml">Artefacto</span>  <span class="mv">1.2 MB</span></div>
+            <div class="mrow"><span class="ml">Features</span>   <span class="mv">47</span></div>
+            <div class="mrow"><span class="ml">Latencia</span>   <span class="mv">&lt; 1 ms</span></div>
+            <div class="mrow"><span class="ml">Despliegue</span> <span class="mv">Vercel Serverless</span></div>
+          </div>
+
+          <div class="metric-block">
+            <div class="block-title">Comparativa de modelos (test)</div>
+            <div class="mrow"><span class="ml">LightGBM</span> <span class="mv red">Gini 0.587</span></div>
+            <div class="mrow"><span class="ml">CatBoost</span> <span class="mv">Gini 0.586</span></div>
+            <div class="mrow"><span class="ml">XGBoost</span>  <span class="mv">Gini 0.585</span></div>
+            <div class="mrow"><span class="ml">GLM</span>      <span class="mv">Gini 0.545</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="card">
+        <div class="card-hdr"><div class="hdr-dot"></div>Recursos</div>
+        <div class="card-body">
+          <div class="link-list">
+
+            <a href="/docs" class="link-item" target="_blank">
+              <div class="link-icon" style="background:#E8F0FE;color:#1a73e8;">📋</div>
+              <div>
+                <div>Documentación API</div>
+                <div class="link-sub">Swagger — todos los endpoints</div>
+              </div>
+            </a>
+
+            <a href="https://github.com/josefrodrim/MODELO_TASK" class="link-item" target="_blank">
+              <div class="link-icon" style="background:#24292E;color:white;font-weight:700;font-size:14px;">GH</div>
+              <div>
+                <div>Código fuente</div>
+                <div class="link-sub">github.com/josefrodrim/MODELO_TASK</div>
+              </div>
+            </a>
+
+            <a href="/health" class="link-item" target="_blank">
+              <div class="link-icon" style="background:#E8F5E9;color:#2e7d32;">♥</div>
+              <div>
+                <div>Health check</div>
+                <div class="link-sub">Estado del servicio en tiempo real</div>
+              </div>
+            </a>
+
+            <a href="/model/info" class="link-item" target="_blank">
+              <div class="link-icon" style="background:#FFF3E0;color:#e65100;">ℹ</div>
+              <div>
+                <div>Info del modelo</div>
+                <div class="link-sub">47 features, versión, tipo</div>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- /RIGHT -->
+
+  </div>
+</main>
+
+<footer>
+  Caso Práctico Risk Data Scientist — Scotiabank Perú &nbsp;·&nbsp;
+  Josef Rodriguez Mimbela &nbsp;·&nbsp;
+  <a href="https://modelo-task.vercel.app">modelo-task.vercel.app</a>
+</footer>
+
+<script>
+  const API = '';  // same origin
+
+  /* ── Health check ── */
+  async function checkHealth() {
+    try {
+      const r = await fetch(`${API}/health`);
+      const d = await r.json();
+      const dot = document.getElementById('dot');
+      const txt = document.getElementById('statusTxt');
+      if (d.model_ready) {
+        dot.className = 'dot ok';
+        txt.textContent = 'Modelo activo';
+      } else {
+        dot.className = 'dot error';
+        txt.textContent = 'Modelo no disponible';
+      }
+    } catch {
+      document.getElementById('statusTxt').textContent = 'Sin conexión';
+    }
+  }
+
+  /* ── Load example ── */
+  function loadExample() {
+    const vals = { X1:'207137', X2:'6427', X3:'', X4:'', X5:'3222',
+                   X6:'1', X7:'633', X8:'1', X9:'SANTIAGO DE SURCO',
+                   X10:'30170', X11:'146', X12:'47' };
+    Object.entries(vals).forEach(([k,v]) => { document.getElementById(k).value = v; });
+    toast('✓ Ejemplo cargado');
+  }
+
+  function resetForm() {
+    ['X1','X2','X3','X4','X5','X6','X7','X8','X9','X10','X11','X12']
+      .forEach(k => { document.getElementById(k).value = ''; });
+    document.getElementById('result').className = 'result';
+    toast('Formulario limpiado');
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  function getVal(id) {
+    const v = document.getElementById(id).value.trim();
+    if (!v) return null;
+    return id === 'X9' ? v.toUpperCase() : parseFloat(v);
+  }
+
+  /* ── Submit ── */
+  document.getElementById('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const btn     = document.getElementById('submitBtn');
+    const spinner = document.getElementById('spinner');
+    const btnTxt  = document.getElementById('btnTxt');
+    const panel   = document.getElementById('result');
+
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnTxt.textContent = 'Calculando...';
+    panel.className = 'result';
+
+    const payload = {};
+    ['X1','X2','X3','X4','X5','X6','X7','X8','X9','X10','X11','X12']
+      .forEach(k => { payload[k] = getVal(k); });
+
+    try {
+      const t0 = performance.now();
+      const r  = await fetch(`${API}/predict`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+      const ms = Math.round(performance.now() - t0);
+
+      if (!r.ok) {
+        const err = await r.json();
+        throw new Error(err.detail || `Error ${r.status}`);
+      }
+
+      const data  = await r.json();
+      const score = data.prediction.toLocaleString('es-PE',
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      document.getElementById('resultVal').textContent  = score;
+      document.getElementById('resultMeta').textContent =
+        `ID: ${data.request_id.slice(0,8)}... · ${ms} ms · LightGBM ONNX`;
+      panel.className = 'result show';
+      toast('✓ Predicción completada');
+
+    } catch (err) {
+      document.getElementById('resultVal').textContent  = 'Error';
+      document.getElementById('resultMeta').textContent = err.message;
+      panel.className = 'result show err';
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnTxt.textContent = 'Calcular Score';
+    }
+  });
+
+  checkHealth();
+</script>
+</body>
+</html>
